@@ -370,11 +370,11 @@ class Board():
         # Loop over all pieces, checking moves of only opposing color pieces
         for sprite in self.all_pieces:
             if sprite.color == opposing_color:  # Only consider pieces of the opposing color
-                # if isinstance(sprite, Pawn):
-                #     attack_moves = self.get_pawn_attack_moves(sprite)  # Special pawn attack moves, not normal moves
+                if isinstance(sprite, Pawn):
+                    attack_moves = self.get_pawn_attack_moves(sprite)  # Special pawn attack moves, not normal moves
                 if isinstance(sprite, Knight):
                     attack_moves = self.get_knight_valid_moves(sprite)
-
+                    
                 elif isinstance(sprite, Queen) or isinstance(sprite, Bishop) or isinstance(sprite, Rook):
                     attack_moves = self.get_rook_bishop_queen_valid_moves(sprite)  # Assumes this handles all three types
                 elif isinstance(sprite, King):
@@ -382,12 +382,6 @@ class Board():
 
 
                 if potential_pos in attack_moves:
-                    if isinstance(sprite,Knight):print("Knight")
-                    elif isinstance(sprite,Bishop):print("Bishop")
-                    elif isinstance(sprite,King):print("King")
-                    elif isinstance(sprite,Queen):print("Queen")
-                    elif isinstance(sprite,Rook):print("Rook")
-
                     return True  # Early exit if any piece can attack the position
 
         return False  # Return False if no pieces can attack the position
