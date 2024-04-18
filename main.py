@@ -30,12 +30,11 @@ class Board():
 
         #Sprite Groups for pieces
         self.all_pieces = pygame.sprite.Group()
-        self.white_pieces = pygame.sprite.Group()
-        self.black_pieces = pygame.sprite.Group()
         
         self.init_pieces()
         self.selected_piece = None
         self.original_pos = None
+
 
     def init_pieces(self):
         self.init_pawns()
@@ -43,7 +42,6 @@ class Board():
         self.init_knights()
         self.init_bishops()
         self.init_king_and_queen()
-
 
 
     def init_pawns(self):
@@ -55,7 +53,6 @@ class Board():
             pawn = Pawn('w', (x, y))
 
             self.all_pieces.add(pawn)
-            self.white_pieces.add(pawn)
 
 
         
@@ -66,7 +63,6 @@ class Board():
             pawn = Pawn('b',(x,y))
 
             self.all_pieces.add(pawn)
-            self.black_pieces.add(pawn)
 
 
     def init_rooks(self):
@@ -79,7 +75,7 @@ class Board():
                     rook = Rook('b',(x,y))
 
                     self.all_pieces.add(rook)
-                    self.black_pieces.add(rook)
+                   
 
                 #Add white rooks
 
@@ -87,8 +83,7 @@ class Board():
                     rook = Rook('w',(x,y))
 
                     self.all_pieces.add(rook)
-                    self.white_pieces.add(rook)
-
+                    
                     
     def init_knights(self):
         for row in [0, 7]:
@@ -100,7 +95,7 @@ class Board():
                     knight = Knight('b',(x,y))
 
                     self.all_pieces.add(knight)
-                    self.black_pieces.add(knight)
+                    
 
 
                 #Add white knights
@@ -109,7 +104,7 @@ class Board():
                     knight = Knight('w',(x,y))
 
                     self.all_pieces.add(knight)
-                    self.white_pieces.add(knight)
+                    
 
 
     def init_bishops(self):
@@ -122,7 +117,7 @@ class Board():
                     bishop = Bishop('b',(x,y))
 
                     self.all_pieces.add(bishop)
-                    self.black_pieces.add(bishop)
+                    
 
 
 
@@ -132,8 +127,7 @@ class Board():
                     bishop = Bishop('w',(x,y))
 
                     self.all_pieces.add(bishop)
-                    self.white_pieces.add(bishop)
-
+                    
     
     def init_king_and_queen(self):
         #Black
@@ -146,7 +140,7 @@ class Board():
         
 
         self.all_pieces.add(queen,king)
-        self.black_pieces.add(queen,king)
+        
 
         
 
@@ -160,7 +154,7 @@ class Board():
 
 
         self.all_pieces.add(queen,king)
-        self.white_pieces.add(queen,king)
+       
 
     #Draw the board
     def init_board(self,surface):
@@ -260,8 +254,6 @@ class Board():
             if 0 <= potential_x < BOARD_SIZE * SQURE_SIZE and 0 <= potential_y < BOARD_SIZE * SQURE_SIZE:
                 potential_pos = (potential_x, potential_y)
                 attack_moves.append(potential_pos)
-        
-        print(attack_moves)
 
         return attack_moves
     
@@ -362,33 +354,40 @@ class Board():
             if to_delete.rect.center == target_center and to_delete != self.selected_piece:
                 self.all_pieces.remove(to_delete)
                 if to_delete.color == 'w':
-                    self.white_pieces.remove(to_delete)
+                    
                     self.all_pieces.remove(to_delete)
                 else:
-                    self.black_pieces.remove(to_delete)
+                    
                     self.all_pieces.remove(to_delete)
                 break  
     
+
     #THIS TING AINT WORKING DA FAQ???
-    def is_under_attack(self, pos, color):
+    def is_under_attack(self, potential_pos, color):
          #Determine the opposing color based on the given color parameter
         opposing_color = 'w' if color == 'b' else 'b'
+        attack_moves =[]
         # Loop over all pieces, checking moves of only opposing color pieces
         for sprite in self.all_pieces:
             if sprite.color == opposing_color:  # Only consider pieces of the opposing color
-                if isinstance(sprite, Pawn):
-                    attack_moves = self.get_pawn_attack_moves(sprite)  # Special pawn attack moves, not normal moves
-                elif isinstance(sprite, Knight):
+                # if isinstance(sprite, Pawn):
+                #     attack_moves = self.get_pawn_attack_moves(sprite)  # Special pawn attack moves, not normal moves
+                if isinstance(sprite, Knight):
                     attack_moves = self.get_knight_valid_moves(sprite)
+
                 elif isinstance(sprite, Queen) or isinstance(sprite, Bishop) or isinstance(sprite, Rook):
                     attack_moves = self.get_rook_bishop_queen_valid_moves(sprite)  # Assumes this handles all three types
                 elif isinstance(sprite, King):
                     attack_moves = self.get_king_valid_moves(sprite)
 
 
-                if pos in attack_moves:
-                    print(sprite.name,sprite.rect.center)
-                    print(self.get_pawn_valid_moves(sprite))
+                if potential_pos in attack_moves:
+                    if isinstance(sprite,Knight):print("Knight")
+                    elif isinstance(sprite,Bishop):print("Bishop")
+                    elif isinstance(sprite,King):print("King")
+                    elif isinstance(sprite,Queen):print("Queen")
+                    elif isinstance(sprite,Rook):print("Rook")
+
                     return True  # Early exit if any piece can attack the position
 
         return False  # Return False if no pieces can attack the position
@@ -465,37 +464,31 @@ while True:
         
         #if player picks up a piece
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if player_active == 'w':
-                for sprite in board.white_pieces:
-                    if sprite.rect.collidepoint(event.pos):
-                        board.selected_piece = sprite
-                        board.original_pos = sprite.rect.center
-                        player_active = 'b'
-                        
-            else:
-                for sprite in board.black_pieces:
-                    if sprite.rect.collidepoint(event.pos):
-                        board.selected_piece = sprite
-                        board.original_pos = sprite.rect.center
-                        player_active = 'w'
+             for sprite in board.all_pieces:
+                if sprite.rect.collidepoint(event.pos) and sprite.color == player_active:
+                    board.selected_piece = sprite
+                    board.original_pos = sprite.rect.center
+                    # Toggle active player from 'w' to 'b' or 'b' to 'w'
+                    player_active = 'b' if player_active == 'w' else 'w'
+                    break
 
         #if player lets go of piece
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if board.selected_piece:
-              
+
                 target_center = board.get_square_center_from_mouse()
                 #If pawn picked
                 if isinstance(board.selected_piece, Pawn):
                     valid_moves = board.get_pawn_valid_moves(board.selected_piece)
-                
                 elif isinstance(board.selected_piece, Knight):
                     valid_moves = board.get_knight_valid_moves(board.selected_piece)
                 
                 elif isinstance(board.selected_piece,King):
                     valid_moves = board.get_king_valid_moves(board.selected_piece)
-                    # for move in valid_moves:
-                    #     if board.is_under_attack(move, board.selected_piece.color):
-                    #         valid_moves.remove(move)
+                    for move in valid_moves:
+                        if board.is_under_attack(move, board.selected_piece.color):
+                            print(True)
+
                 else:
                     valid_moves = board.get_rook_bishop_queen_valid_moves(board.selected_piece)
 
