@@ -258,7 +258,7 @@ class Board():
         return attack_moves
     
 
-    def get_knight_attack_moves(self,kngiht):
+    def get_knight_attack_moves(self,knight):
         attack_moves = []
         start_pos = knight.rect.center  
 
@@ -465,7 +465,7 @@ class Board():
                     attack_moves = self.get_pawn_attack_moves(sprite) 
 
                 elif isinstance(sprite, Knight):
-                    attack_moves = self.get_king_attack_moves(sprite)
+                    attack_moves = self.get_knight_attack_moves(sprite)
                    
                     
                 elif isinstance(sprite, Queen) or isinstance(sprite, Bishop) or isinstance(sprite, Rook):
@@ -477,7 +477,6 @@ class Board():
 
 
                 if potential_pos in attack_moves:
-                    
                     return True  # Early exit if any piece can attack the position
 
         return False  # Return False if no pieces can attack the position
