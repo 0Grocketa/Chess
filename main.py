@@ -258,6 +258,36 @@ class Board():
         return attack_moves
     
 
+    def get_knight_attack_moves(self,kngiht):
+        attack_moves = []
+        start_pos = knight.rect.center  
+
+        directions = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
+
+        if start_pos:
+            for direction in directions:
+                x_increment, y_increment = direction
+                x,y = start_pos
+                
+                while True:
+                    x+= x_increment * SQURE_SIZE
+                    y+= y_increment * SQURE_SIZE
+
+                    # Check if the landing square is free or occupied by an opposing piece
+                    if 0 <= x <= SQURE_SIZE * BOARD_SIZE and 0 <= y <= SQURE_SIZE * BOARD_SIZE:
+                        pos = (x,y)
+                        
+                        if self.is_square_free(pos):
+                            attack_moves.append(pos)
+
+                        else:
+                            if self.get_color_of_piece_bysquare(pos) != knight.color:
+                               attack_moves.append(pos)
+                    else:
+                        break # Stop if moving further would go off the board
+        return attack_moves
+
+
     def get_knight_valid_moves(self, knight):
         valid_moves = []
         start_pos = self.original_pos  
@@ -327,6 +357,45 @@ class Board():
         return valid_moves
 
 
+    def get_rook_bishop_queen_attack_moves(self,piece):
+        if isinstance(piece,Rook):
+            directions = [(1,0),(0,1),(-1,0),(0,-1)]
+        
+        elif isinstance(piece, Bishop):
+            directions = [(1,1),(1,-1),(-1,1),(-1,-1)]
+
+        elif isinstance(piece, Queen):
+            directions = [(1,0),(0,1),(-1,0),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]
+
+        attack_moves = []
+        start_pos = piece.rect.center  
+
+        if start_pos:
+            for direction in directions:
+                x_increment, y_increment = direction
+                x,y = start_pos
+                
+                while True:
+                    x+= x_increment * SQURE_SIZE
+                    y+= y_increment * SQURE_SIZE
+
+                    # Check if the landing square is free or occupied by an opposing piece
+                    if 0 <= x <= SQURE_SIZE * BOARD_SIZE and 0 <= y <= SQURE_SIZE * BOARD_SIZE:
+                        pos = (x,y)
+                        
+                        if self.is_square_free(pos):
+                            attack_moves.append(pos)
+
+                        else:
+                            if self.get_color_of_piece_bysquare(pos) != piece.color:
+                                attack_moves.append(pos)
+                            break # Stop moving in this direction upon hitting a piece
+                    else:
+                        break # Stop if moving further would go off the board
+
+        return attack_moves
+
+
     def get_king_valid_moves(self,king):
         valid_moves = []
         start_pos = self.original_pos
@@ -349,6 +418,28 @@ class Board():
         return valid_moves
                 
 
+    def get_king_attack_moves(self,king):
+        attack_moves = []
+        start_pos = king.rect.center
+        directions = [(1,0),(0,1),(-1,0),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]
+
+        if start_pos:
+            x_start, y_start = start_pos
+            for dx, dy in directions:
+                x_new = x_start + dx * SQURE_SIZE
+                y_new = y_start + dy * SQURE_SIZE
+                pos = (x_new,y_new)
+
+                # Ensure the new position is within the board boundaries
+                if 0 <= x_new < BOARD_SIZE * SQURE_SIZE and 0 <= y_new < BOARD_SIZE * SQURE_SIZE:
+                    pos = (x_new, y_new)
+
+                    if (self.is_square_free(pos) or self.get_color_of_piece_bysquare(pos) != king.color):
+                        attack_moves.append(pos)
+
+        return attack_moves
+
+
     def take_piece(self, target_center):
         for to_delete in self.all_pieces:  # Iterate over a copy since we're modifying the group
             if to_delete.rect.center == target_center and to_delete != self.selected_piece:
@@ -362,7 +453,7 @@ class Board():
                 break  
     
 
-    #Problema w tom kak my schitajem start+_pos of pieces pawn is good now do the rest the rook queen bishop is ass
+    #napishi funkcjii otdelnyje po potential moves
     def is_under_attack(self, potential_pos, color):
          #Determine the opposing color based on the given color parameter
         opposing_color = 'w' if color == 'b' else 'b'
@@ -374,19 +465,19 @@ class Board():
                     attack_moves = self.get_pawn_attack_moves(sprite) 
 
                 elif isinstance(sprite, Knight):
-                    attack_moves = self.get_knight_valid_moves(sprite)
-                    print(attack_moves)
+                    attack_moves = self.get_king_attack_moves(sprite)
+                   
                     
                 elif isinstance(sprite, Queen) or isinstance(sprite, Bishop) or isinstance(sprite, Rook):
-                    attack_moves = self.get_rook_bishop_queen_valid_moves(sprite)
+                    attack_moves = self.get_rook_bishop_queen_attack_moves(sprite)
                 
-                    print(attack_moves)
+                    
                 elif isinstance(sprite, King):
-                    attack_moves = self.get_king_valid_moves(sprite)
+                    attack_moves = self.get_king_attack_moves(sprite)
 
 
                 if potential_pos in attack_moves:
-                    print(sprite.rect.center)
+                    
                     return True  # Early exit if any piece can attack the position
 
         return False  # Return False if no pieces can attack the position
@@ -487,6 +578,7 @@ while True:
                     valid_moves = board.get_king_valid_moves(board.selected_piece)
                     for move in valid_moves:
                         if board.is_under_attack(move, board.selected_piece.color):
+                            
                             valid_moves.remove(move)
 
                 else:
