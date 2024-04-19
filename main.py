@@ -238,7 +238,7 @@ class Board():
         direction = -1 if pawn.color == 'w' else 1  # Determine movement direction based on color
 
         # Get the current position of the pawn on the board
-        current_pos = self.get_piece_position()
+        current_pos = pawn.rect.center
 
         if current_pos is None:
             return attack_moves  # If position is not found, return empty list
@@ -260,7 +260,7 @@ class Board():
 
     def get_knight_valid_moves(self, knight):
         valid_moves = []
-        start_pos = self.get_piece_position()  
+        start_pos = self.original_pos  
 
         directions = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
 
@@ -299,7 +299,7 @@ class Board():
             directions = [(1,0),(0,1),(-1,0),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]
 
         valid_moves = []
-        start_pos = self.get_piece_position()  
+        start_pos = self.original_pos  
 
         if start_pos:
             for direction in directions:
@@ -329,7 +329,7 @@ class Board():
 
     def get_king_valid_moves(self,king):
         valid_moves = []
-        start_pos = self.get_piece_position()
+        start_pos = self.original_pos
         directions = [(1,0),(0,1),(-1,0),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]
 
         if start_pos:
@@ -362,7 +362,7 @@ class Board():
                 break  
     
 
-    #THIS TING AINT WORKING DA FAQ???
+    #Problema w tom kak my schitajem start+_pos of pieces pawn is good now do the rest the rook queen bishop is ass
     def is_under_attack(self, potential_pos, color):
          #Determine the opposing color based on the given color parameter
         opposing_color = 'w' if color == 'b' else 'b'
@@ -371,17 +371,22 @@ class Board():
         for sprite in self.all_pieces:
             if sprite.color == opposing_color:  # Only consider pieces of the opposing color
                 if isinstance(sprite, Pawn):
-                    attack_moves = self.get_pawn_attack_moves(sprite)  # Special pawn attack moves, not normal moves
-                if isinstance(sprite, Knight):
+                    attack_moves = self.get_pawn_attack_moves(sprite) 
+
+                elif isinstance(sprite, Knight):
                     attack_moves = self.get_knight_valid_moves(sprite)
+                    print(attack_moves)
                     
                 elif isinstance(sprite, Queen) or isinstance(sprite, Bishop) or isinstance(sprite, Rook):
-                    attack_moves = self.get_rook_bishop_queen_valid_moves(sprite)  # Assumes this handles all three types
+                    attack_moves = self.get_rook_bishop_queen_valid_moves(sprite)
+                
+                    print(attack_moves)
                 elif isinstance(sprite, King):
                     attack_moves = self.get_king_valid_moves(sprite)
 
 
                 if potential_pos in attack_moves:
+                    print(sprite.rect.center)
                     return True  # Early exit if any piece can attack the position
 
         return False  # Return False if no pieces can attack the position
@@ -474,6 +479,7 @@ while True:
                 #If pawn picked
                 if isinstance(board.selected_piece, Pawn):
                     valid_moves = board.get_pawn_valid_moves(board.selected_piece)
+                    
                 elif isinstance(board.selected_piece, Knight):
                     valid_moves = board.get_knight_valid_moves(board.selected_piece)
                 
@@ -481,7 +487,7 @@ while True:
                     valid_moves = board.get_king_valid_moves(board.selected_piece)
                     for move in valid_moves:
                         if board.is_under_attack(move, board.selected_piece.color):
-                            print(True)
+                            valid_moves.remove(move)
 
                 else:
                     valid_moves = board.get_rook_bishop_queen_valid_moves(board.selected_piece)
