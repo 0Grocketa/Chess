@@ -258,33 +258,29 @@ class Board():
         return attack_moves
     
 
-    def get_knight_attack_moves(self,knight):
+    def get_knight_attack_moves(self, knight):
         attack_moves = []
         start_pos = knight.rect.center  
 
+        # List of all possible "L" moves for a knight
         directions = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]
 
-        if start_pos:
-            for direction in directions:
-                x_increment, y_increment = direction
-                x,y = start_pos
-                
-                while True:
-                    x+= x_increment * SQURE_SIZE
-                    y+= y_increment * SQURE_SIZE
+        # Get the starting coordinates
+        start_x, start_y = start_pos
 
-                    # Check if the landing square is free or occupied by an opposing piece
-                    if 0 <= x <= SQURE_SIZE * BOARD_SIZE and 0 <= y <= SQURE_SIZE * BOARD_SIZE:
-                        pos = (x,y)
-                        
-                        if self.is_square_free(pos):
-                            attack_moves.append(pos)
+        for dx, dy in directions:
+            # Calculate the new position based on each "L" shaped movement
+            x = start_x + dx * SQURE_SIZE
+            y = start_y + dy * SQURE_SIZE
 
-                        else:
-                            if self.get_color_of_piece_bysquare(pos) != knight.color:
-                               attack_moves.append(pos)
-                    else:
-                        break # Stop if moving further would go off the board
+            # Check if the new position is within the bounds of the chess board
+            if 0 <= x < SQURE_SIZE * BOARD_SIZE and 0 <= y < SQURE_SIZE * BOARD_SIZE:
+                new_pos = (x, y)
+
+                # Append the position if it's either free or occupied by an opposing piece
+                if self.is_square_free(new_pos) or self.get_color_of_piece_bysquare(new_pos) != knight.color:
+                    attack_moves.append(new_pos)
+
         return attack_moves
 
 
@@ -463,6 +459,7 @@ class Board():
             if sprite.color == opposing_color:  # Only consider pieces of the opposing color
                 if isinstance(sprite, Pawn):
                     attack_moves = self.get_pawn_attack_moves(sprite) 
+                    
 
                 elif isinstance(sprite, Knight):
                     attack_moves = self.get_knight_attack_moves(sprite)
@@ -477,6 +474,7 @@ class Board():
 
 
                 if potential_pos in attack_moves:
+
                     return True  # Early exit if any piece can attack the position
 
         return False  # Return False if no pieces can attack the position
