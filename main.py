@@ -449,7 +449,6 @@ class Board():
                 break  
     
 
-    #napishi funkcjii otdelnyje po potential moves
     def is_under_attack(self, potential_pos, color):
          #Determine the opposing color based on the given color parameter
         opposing_color = 'w' if color == 'b' else 'b'
@@ -460,7 +459,6 @@ class Board():
                 if isinstance(sprite, Pawn):
                     attack_moves = self.get_pawn_attack_moves(sprite) 
                     
-
                 elif isinstance(sprite, Knight):
                     attack_moves = self.get_knight_attack_moves(sprite)
                    
@@ -479,6 +477,27 @@ class Board():
 
         return False  # Return False if no pieces can attack the position
 
+    
+    def get_valid_moves(self,target_center):
+        
+        #If pawn picked
+        if isinstance(board.selected_piece, Pawn):
+            valid_moves = board.get_pawn_valid_moves(board.selected_piece)
+                    
+        elif isinstance(board.selected_piece, Knight):
+            valid_moves = board.get_knight_valid_moves(board.selected_piece)
+                
+        elif isinstance(board.selected_piece,King):
+            valid_moves = board.get_king_valid_moves(board.selected_piece)
+            for move in valid_moves:
+                if board.is_under_attack(move, board.selected_piece.color):
+                            
+                    valid_moves.remove(move)
+
+        else:
+            valid_moves = board.get_rook_bishop_queen_valid_moves(board.selected_piece)
+        
+        return valid_moves
 
 
 class Piece(pygame.sprite.Sprite):
@@ -562,26 +581,10 @@ while True:
         #if player lets go of piece
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if board.selected_piece:
-
                 target_center = board.get_square_center_from_mouse()
-                #If pawn picked
-                if isinstance(board.selected_piece, Pawn):
-                    valid_moves = board.get_pawn_valid_moves(board.selected_piece)
-                    
-                elif isinstance(board.selected_piece, Knight):
-                    valid_moves = board.get_knight_valid_moves(board.selected_piece)
-                
-                elif isinstance(board.selected_piece,King):
-                    valid_moves = board.get_king_valid_moves(board.selected_piece)
-                    for move in valid_moves:
-                        if board.is_under_attack(move, board.selected_piece.color):
-                            
-                            valid_moves.remove(move)
 
-                else:
-                    valid_moves = board.get_rook_bishop_queen_valid_moves(board.selected_piece)
+                valid_moves = board.get_valid_moves(target_center)
 
-                  
                 if target_center in valid_moves: 
 
                     if not board.is_square_free(target_center):
@@ -593,6 +596,7 @@ while True:
                 else:
                     #if not valid revert to original pos
                     board.selected_piece.rect.center = board.original_pos
+                    
                 board.selected_piece = None
 
         
