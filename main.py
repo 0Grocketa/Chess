@@ -514,11 +514,12 @@ class Board():
                 if self.is_square_under_attack(king.rect.center, king.color):
                     return True
 
+
     #Chnage active player
     def swicth_player(self):
         return 'w' if self.player_active == 'b' else 'b'
     
-
+    #Dopili tut 
     def move_resolves_check(self, piece, target_pos):
         #We need this opposing color since we revert color we pass to is_check but here we want
         #  to check if move will resolve a check given to active player
@@ -615,8 +616,16 @@ while True:
                 target_center = board.get_square_center_from_mouse()
                 valid_moves = board.get_valid_moves(target_center)
 
-                if target_center in valid_moves: 
+                # If in check, filter the moves to only those that would resolve the check
+                if board.is_check(board.player_active):
+                    #if selecetd king we also check if we take another 
+                    if isinstance(board.selected_piece, King):
+                        valid_moves = [move for move in valid_moves if (board.is_square_under_attack(move,board.player_active) and board.move_resolves_check(board.selected_piece,move))]
+                    else: 
+                        valid_moves = [move for move in valid_moves if board.move_resolves_check(board.selected_piece,move)]
 
+                if target_center in valid_moves: 
+                    
                     if not board.is_square_free(target_center):
                         board.take_piece(target_center)
 
