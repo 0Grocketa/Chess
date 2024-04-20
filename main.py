@@ -5,7 +5,7 @@ SQURE_SIZE = 100
 BOARD_SIZE = 8
 game_active = False
 
-player_active = 'w'
+
 
 class Board():
     def __init__(self):
@@ -34,6 +34,7 @@ class Board():
         self.init_pieces()
         self.selected_piece = None
         self.original_pos = None
+        self.player_active = 'w'
 
 
     def init_pieces(self):
@@ -449,7 +450,7 @@ class Board():
                 break  
     
 
-    def is_under_attack(self, potential_pos, color):
+    def is_square_under_attack(self, potential_pos, color):
          #Determine the opposing color based on the given color parameter
         opposing_color = 'w' if color == 'b' else 'b'
         attack_moves =[]
@@ -490,7 +491,7 @@ class Board():
         elif isinstance(board.selected_piece,King):
             valid_moves = board.get_king_valid_moves(board.selected_piece)
             for move in valid_moves:
-                if board.is_under_attack(move, board.selected_piece.color):
+                if board.is_square_under_attack(move, board.selected_piece.color):
                             
                     valid_moves.remove(move)
 
@@ -498,6 +499,37 @@ class Board():
             valid_moves = board.get_rook_bishop_queen_valid_moves(board.selected_piece)
         
         return valid_moves
+
+
+    def is_check(self,color):
+        opposing_color = 'w' if color == 'b' else 'b'
+        #find the king 
+        for sprite in self.all_pieces:
+            if color == sprite.color and isinstance(sprite,King):
+                king = sprite
+                break
+        #check for cheks
+        for piece in self.all_pieces:
+            if piece.color == opposing_color:
+                if self.is_square_under_attack(king.rect.center, king.color):
+                    return True
+
+    #Chnage active player
+    def swicth_player(self):
+        return 'w' if self.player_active == 'b' else 'b'
+    
+
+    def move_resolves_check(self, piece, target_pos):
+        #We need this opposing color since we revert color we pass to is_check but here we want
+        #  to check if move will resolve a check given to active player
+        opposing_color = 'w' if piece.color == 'b' else 'b'
+
+        # Simulate the move
+        piece.rect.center = target_pos
+        check_status = not self.is_check(opposing_color)
+        # Revert the move
+        piece.rect.center = self.original_pos
+        return check_status
 
 
 class Piece(pygame.sprite.Sprite):
@@ -571,18 +603,16 @@ while True:
         #if player picks up a piece
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
              for sprite in board.all_pieces:
-                if sprite.rect.collidepoint(event.pos) and sprite.color == player_active:
+                if sprite.rect.collidepoint(event.pos) and sprite.color == board.player_active:
                     board.selected_piece = sprite
                     board.original_pos = sprite.rect.center
-                    # Toggle active player from 'w' to 'b' or 'b' to 'w'
-                    player_active = 'b' if player_active == 'w' else 'w'
                     break
 
         #if player lets go of piece
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if board.selected_piece:
-                target_center = board.get_square_center_from_mouse()
 
+                target_center = board.get_square_center_from_mouse()
                 valid_moves = board.get_valid_moves(target_center)
 
                 if target_center in valid_moves: 
@@ -592,6 +622,8 @@ while True:
 
                     board.selected_piece.rect.center = target_center
                     
+                    #Switch player after successfull move
+                    board.player_active = board.swicth_player()
                      
                 else:
                     #if not valid revert to original pos
