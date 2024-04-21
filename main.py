@@ -479,7 +479,7 @@ class Board():
         return False  # Return False if no pieces can attack the position
 
     
-    def get_valid_moves(self,target_center):
+    def get_valid_moves(self):
         
         #If pawn picked
         if isinstance(board.selected_piece, Pawn):
@@ -501,36 +501,68 @@ class Board():
         return valid_moves
 
 
-    def is_check(self,color):
-        opposing_color = 'w' if color == 'b' else 'b'
-        #find the king 
-        for sprite in self.all_pieces:
-            if color == sprite.color and isinstance(sprite,King):
-                king = sprite
-                break
-        #check for cheks
-        for piece in self.all_pieces:
-            if piece.color == opposing_color:
-                if self.is_square_under_attack(king.rect.center, king.color):
-                    return True
-
-
     #Chnage active player
     def swicth_player(self):
         return 'w' if self.player_active == 'b' else 'b'
-    
-    #Dopili tut 
-    def move_resolves_check(self, piece, target_pos):
-        #We need this opposing color since we revert color we pass to is_check but here we want
-        #  to check if move will resolve a check given to active player
-        opposing_color = 'w' if piece.color == 'b' else 'b'
 
-        # Simulate the move
-        piece.rect.center = target_pos
-        check_status = not self.is_check(opposing_color)
-        # Revert the move
-        piece.rect.center = self.original_pos
-        return check_status
+    #Return true if piece is not pinned
+    def is_pinned(self, piece, target_center):
+        # Temporarily move the piece
+        piece.rect.center = target_center
+
+        # Find the king for the current player
+        for sprite in self.all_pieces:
+            if isinstance(sprite,King) and sprite.color == board.player_active:
+                king = sprite
+
+        # If king is not found (which shouldn't happen), revert the piece and return False
+        if not king:
+            piece.rect.center = board.original_pos
+            return False
+
+        # Check if the king is now in check
+        if self.is_square_under_attack(king.rect.center, king.color):
+            # If king is in check after the move, revert the move
+            piece.rect.center = board.original_pos
+            return False
+        else:
+            # If the move is valid (not leaving the king in check), confirm the move
+            return True
+
+    #Returns valid moves of the piece with considiration of the check
+    def respond_to_check(self, color,king):
+
+        valid_moves = []
+
+        #If we try to move the king out the danger
+        if isinstance(self.selected_piece, King):
+            king_moves = self.get_king_valid_moves(king)
+
+            #check if the square we want to move is under uttack of other peices
+            for move in king_moves:
+                if not self.is_check(king):
+                    valid_moves.append((king, move))
+        
+        #if we try to block the king with other piece
+        else:
+            potential_moves = self.get_valid_moves()
+
+            for move in potential_moves:
+                self.selected_piece.rect.center = move
+                print(self.is_check(king))
+                if not self.is_check(king):
+                    valid_moves.append(move)
+
+                self.selected_piece.rect.center = self.original_pos
+
+        return valid_moves
+    
+
+    def is_check(self,king):
+        return True if self.is_square_under_attack(king.rect.center, king.color) else False
+        
+
+
 
 
 class Piece(pygame.sprite.Sprite):
@@ -612,32 +644,34 @@ while True:
         #if player lets go of piece
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if board.selected_piece:
-
+                
                 target_center = board.get_square_center_from_mouse()
-                valid_moves = board.get_valid_moves(target_center)
-
-                # If in check, filter the moves to only those that would resolve the check
-                if board.is_check(board.player_active):
-                    #if selecetd king we also check if we take another 
-                    if isinstance(board.selected_piece, King):
-                        valid_moves = [move for move in valid_moves if (board.is_square_under_attack(move,board.player_active) and board.move_resolves_check(board.selected_piece,move))]
-                    else: 
-                        valid_moves = [move for move in valid_moves if board.move_resolves_check(board.selected_piece,move)]
-
+                
+                for sprite in board.all_pieces:
+                    if isinstance(sprite,King) and sprite.color == board.player_active:
+                        king = sprite
+                
+                if board.is_check(king):
+                    valid_moves = board.respond_to_check(board.player_active,king)
+                else:
+                    valid_moves = board.get_valid_moves()
+                
                 if target_center in valid_moves: 
                     
-                    if not board.is_square_free(target_center):
-                        board.take_piece(target_center)
+                    if board.is_pinned(board.selected_piece, target_center):
 
-                    board.selected_piece.rect.center = target_center
-                    
-                    #Switch player after successfull move
-                    board.player_active = board.swicth_player()
-                     
+                        if not board.is_square_free(target_center):
+                            board.take_piece(target_center)
+
+                        board.selected_piece.rect.center = target_center
+                            
+                        #Switch player after successfull move
+                        board.player_active = board.swicth_player()
+                        
                 else:
                     #if not valid revert to original pos
                     board.selected_piece.rect.center = board.original_pos
-                    
+
                 board.selected_piece = None
 
         
