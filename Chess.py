@@ -543,8 +543,8 @@ def game_over(loser):
         surfaceGameOver = font.render(f"Checkmate black wins!",True, "black")
     else:
         surfaceGameOver = font.render(f"Checkmate white wins!",True, "black")
-        screen.fill((118,150,86))
-        screen.blit(surfaceGameOver,(200,400))
+    screen.fill((118,150,86))
+    screen.blit(surfaceGameOver,(200,400))
 
 
 pygame.init()
