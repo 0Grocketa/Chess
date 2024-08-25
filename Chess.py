@@ -209,7 +209,7 @@ class Board():
                                 if endRowLastPiece == currentRow:
                                     validMoves.append((nextRow,nextCol))
                     
-        print(validMoves)
+        
         return validMoves
 
     def move_piece(self, piece, targetPos):
